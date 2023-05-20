@@ -1,13 +1,13 @@
+import React from 'react';
 import './App.css';
+import ChatApp from './ChatApp';
 
-function App() {
+const App = () => {
   return (
     <div className="App">
-      <header className="App-header">
-
-      </header>
+      <ChatApp />
     </div>
   );
-}
+};
 
 export default App;
