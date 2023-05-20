@@ -1,44 +1,81 @@
 import React, { useState } from 'react';
 
 const ChatApp = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+  const handleInputChange = (e) => {
+    setInputText(e.target.value);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (inputText.trim() === '') {
+      return;
+    }
+
+    // Make an API call to ChatGPT and get the response
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: inputText }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const reply = data.reply;
+
+      // Update the chat history with user input and model reply
+      setChatHistory((prevHistory) => [
+        ...prevHistory,
+        { message: inputText, isUser: true },
+        { message: reply, isUser: false },
+      ]);
+
+      setInputText('');
+    }
   };
 
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-800 text-white' : ''}`}>
+    <div className="flex flex-col h-screen">
       <div className="flex-grow p-4 bg-gray-100">
-        {/* Messages */}
         <div className="flex flex-col gap-4">
-          {/* Individual messages */}
-          <div className="flex">
-            <div className="max-w-xs p-2 text-white bg-blue-500 rounded-lg">
-              Hello!
+          {/* Display chat messages */}
+          {chatHistory.map((chat, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                chat.isUser ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`bg-${
+                  chat.isUser ? 'green' : 'blue'
+                }-500 text-white rounded-lg p-2 max-w-xs`}
+              >
+                {chat.message}
+              </div>
             </div>
-          </div>
-          <div className="flex justify-end">
-            <div className="max-w-xs p-2 text-white bg-green-500 rounded-lg">
-              Hi!
-            </div>
-          </div>
+          ))}
         </div>
       </div>
       <div className="p-4">
         {/* Input area */}
-        <input
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          type="text"
-          placeholder="Type your message..."
-        />
+        <form onSubmit={handleFormSubmit}>
+          <input
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            type="text"
+            value={inputText}
+            onChange={handleInputChange}
+            placeholder="Type something..."
+          />
+          <button type="submit" className="mt-2">
+            Send
+          </button>
+        </form>
       </div>
-      <button
-        className="fixed p-2 text-gray-800 bg-gray-300 rounded-full bottom-4 left-4 hover:bg-gray-400 hover:text-gray-900"
-        onClick={toggleDarkMode}
-      >
-        {darkMode ? 'Light Mode' : 'Dark Mode'}
-      </button>
     </div>
   );
 };
